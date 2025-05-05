@@ -24,15 +24,15 @@ public class ProjectPageTests extends BaseTest {
         $(".common-flash-success").shouldBe(visible);
 
         String projectName = "Manufacture light";
-        String projectSlug = "manufacture-light";
-        String expectedUrl = config.getBaseUrl() + "/projects/" + projectSlug + "/";
+        String targetProjectPath = "/projects/manufacture-light/";
+        String expectedUrl = config.getBaseUrl() +  targetProjectPath;
 
 
         //search project
         $("#search").setValue(projectName);
 
         //select project
-        $("[href=\"/projects/" + projectSlug + "/\"]").click();
+        $("[href=\"" + targetProjectPath + "\"]").click();
 
         //open project
         webdriver().shouldHave(WebDriverConditions.url(expectedUrl));
