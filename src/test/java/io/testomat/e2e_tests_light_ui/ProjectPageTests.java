@@ -18,7 +18,6 @@ import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.$$;
-import static com.codeborne.selenide.Selenide.$x;
 import static com.codeborne.selenide.Selenide.open;
 import static com.codeborne.selenide.Selenide.switchTo;
 import static com.codeborne.selenide.Selenide.webdriver;
@@ -32,8 +31,9 @@ public class ProjectPageTests extends BaseTest {
 
     @BeforeAll
     public static void openTestomatAndLogin() {
+        TestConfig.Credentials credentials = config.getCredentials();
         open(config.getBaseUrl());
-        loginUser();
+        loginUser(credentials.getEmail(), credentials.getPassword());
 
     }
 
@@ -47,7 +47,7 @@ public class ProjectPageTests extends BaseTest {
     public void loginFindProjectWithTests() {
         searchProject(PROJECT_NAME);
         selectProject(TARGET_PROJECT_PATH);
-        openProject(EXPECTED_URL, PROJECT_NAME);
+        verifyProjectPage(EXPECTED_URL, PROJECT_NAME);
 
     }
 
@@ -63,9 +63,9 @@ public class ProjectPageTests extends BaseTest {
     public void editReadme() {
         searchProject(PROJECT_NAME);
         selectProject(TARGET_PROJECT_PATH);
-        openProject(EXPECTED_URL, PROJECT_NAME);
-        openReadme("readme").click();
-        openEditForm("settings/readme").click();
+        verifyProjectPage(EXPECTED_URL, PROJECT_NAME);
+        findVisibleLinkBySubPath("readme").click();
+        findVisibleLinkBySubPath("settings/readme").click();
         String readmeText = updateReadmeText();
         readmeTextWasUpdated(readmeText);
 
@@ -73,12 +73,12 @@ public class ProjectPageTests extends BaseTest {
 
     private void readmeTextWasUpdated(String readmeText) {
         $("div.ember-notify-cn.custom-notify").shouldBe(visible, Duration.ofSeconds(5)).shouldHave(text("Readme has been saved"));
-        openEditForm("readme").click();
+        findVisibleLinkBySubPath("readme").click();
         $("div.markdown p").shouldHave(Condition.text("Readme was edited by " + readmeText));
     }
 
     private static String updateReadmeText() {
-        $x("//button[.//text()[contains(., 'Edit Readme')]]").click();
+        $$("button").findBy(text("Edit Readme")).click();
         switchTo().frame($("div.frame-container iframe"));
         SelenideElement textArea = $("div.view-lines.monaco-mouse-cursor-text");
         textArea.shouldBe(visible).click();
@@ -93,16 +93,11 @@ public class ProjectPageTests extends BaseTest {
         return word;
     }
 
-    private SelenideElement openEditForm(String subPath) {
+    private SelenideElement findVisibleLinkBySubPath(String subPath) {
         return $$("[href='" + TARGET_PROJECT_PATH + subPath + "']").find(Condition.visible);
     }
 
-    private SelenideElement openReadme(String subPath) {
-        return $("[href='" + TARGET_PROJECT_PATH + subPath + "']");
-    }
-
-
-    private void openProject(String expectedUrl, String projectName) {
+    private void verifyProjectPage(String expectedUrl, String projectName) {
         webdriver().shouldHave(WebDriverConditions.url(expectedUrl));
         $("h2").shouldHave(text(projectName));
     }
@@ -115,10 +110,9 @@ public class ProjectPageTests extends BaseTest {
         $("#search").setValue(projectName);
     }
 
-    private static void loginUser() {
-        TestConfig.Credentials credentials = config.getCredentials();
-        $("#content-desktop #user_email").setValue(credentials.getEmail());
-        $("#content-desktop #user_password").setValue(credentials.getPassword());
+    private static void loginUser(String email, String password) {
+        $("#content-desktop #user_email").setValue(email);
+        $("#content-desktop #user_password").setValue(password);
         $("#content-desktop #user_remember_me").click();
         $("#content-desktop [name=commit]").click();
         $(".common-flash-success").shouldBe(visible);
@@ -131,6 +125,6 @@ public class ProjectPageTests extends BaseTest {
     }
 
     private ElementsCollection countOfProjectsShouldBeEqualTo(int expectedSize) {
-        return $$(String.format("#grid ul li:has(a[href='%s'])", TARGET_PROJECT_PATH)).filter(visible).shouldHave(size(expectedSize));
+        return $$(String.format("#grid ul li a[href='%s']", TARGET_PROJECT_PATH)).filter(visible).shouldHave(size(expectedSize));
     }
 }
