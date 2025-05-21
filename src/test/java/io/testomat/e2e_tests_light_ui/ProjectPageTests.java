@@ -21,6 +21,7 @@ import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.$$;
 import static com.codeborne.selenide.Selenide.$x;
+import static com.codeborne.selenide.Selenide.open;
 import static com.codeborne.selenide.Selenide.switchTo;
 import static com.codeborne.selenide.Selenide.webdriver;
 import static io.testomat.e2e_tests_light_ui.utils.StringParsers.parseIntegerFromString;
@@ -77,7 +78,7 @@ public class ProjectPageTests extends BaseTest {
     }
 
     private static String updateReadmeText() {
-        $x("//button[.//text()[contains(., 'Edit Readme')]]").click();
+        $$("button").findBy(text("Edit Readme")).click();
         switchTo().frame($("div.frame-container iframe"));
         SelenideElement textArea = $("div.view-lines.monaco-mouse-cursor-text");
         textArea.shouldBe(visible).click();
@@ -92,7 +93,7 @@ public class ProjectPageTests extends BaseTest {
         return word;
     }
 
-    private SelenideElement openEditForm(String subPath) {
+    private SelenideElement findVisibleLinkBySubPath(String subPath) {
         return $$("[href='" + TARGET_PROJECT_PATH + subPath + "']").find(Condition.visible);
     }
 
@@ -100,9 +101,25 @@ public class ProjectPageTests extends BaseTest {
         return $("[href='" + TARGET_PROJECT_PATH + subPath + "']");
     }
 
-    private void waitForProjectIsLoaded(String expectedUrl, String projectName) {
+    private void verifyProjectPage(String expectedUrl, String projectName) {
         webdriver().shouldHave(WebDriverConditions.url(expectedUrl));
         $("h2").shouldHave(text(projectName));
+    }
+
+    private void selectProject(String targetProjectPath) {
+        $("[href=\"" + targetProjectPath + "\"]").click();
+    }
+
+    private void searchProject(String projectName) {
+        $("#search").setValue(projectName);
+    }
+
+    private static void loginUser(String email, String password) {
+        $("#content-desktop #user_email").setValue(email);
+        $("#content-desktop #user_password").setValue(password);
+        $("#content-desktop #user_remember_me").click();
+        $("#content-desktop [name=commit]").click();
+        $(".common-flash-success").shouldBe(visible);
     }
 
     private static void countOfTestCasesShouldBeEqualTo(SelenideElement targetProject, int expectedCount) {
@@ -112,6 +129,6 @@ public class ProjectPageTests extends BaseTest {
     }
 
     private ElementsCollection countOfProjectsShouldBeEqualTo(int expectedSize) {
-        return $$(String.format("#grid ul li:has(a[href='%s'])", TARGET_PROJECT_PATH)).filter(visible).shouldHave(size(expectedSize));
+        return $$(String.format("#grid ul li a[href='%s']", TARGET_PROJECT_PATH)).filter(visible).shouldHave(size(expectedSize));
     }
 }
