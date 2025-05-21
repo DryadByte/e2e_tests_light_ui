@@ -20,8 +20,6 @@ import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.$$;
-import static com.codeborne.selenide.Selenide.$x;
-import static com.codeborne.selenide.Selenide.open;
 import static com.codeborne.selenide.Selenide.switchTo;
 import static com.codeborne.selenide.Selenide.webdriver;
 import static io.testomat.e2e_tests_light_ui.utils.StringParsers.parseIntegerFromString;
@@ -43,14 +41,14 @@ public class ProjectPageTests extends BaseTest {
     @BeforeEach
     public void openProjectPage() {
         projectsPage.open();
-        projectsPage.isLoaded();
+//        projectsPage.isLoaded();
     }
 
     @Test
     public void findAndOpenProjectTests() {
         projectsPage.searchProject(PROJECT_NAME);
         projectsPage.clickOnProject(TARGET_PROJECT_PATH);
-        waitForProjectIsLoaded(EXPECTED_URL, PROJECT_NAME);
+        verifyProjectPage(EXPECTED_URL, PROJECT_NAME);
     }
 
     @Test
@@ -64,16 +62,16 @@ public class ProjectPageTests extends BaseTest {
     public void editReadme() {
         projectsPage.searchProject(PROJECT_NAME);
         projectsPage.clickOnProject(TARGET_PROJECT_PATH);
-        waitForProjectIsLoaded(EXPECTED_URL, PROJECT_NAME);
+        verifyProjectPage(EXPECTED_URL, PROJECT_NAME);
         openReadme("readme").click();
-        openEditForm("settings/readme").click();
+        findVisibleLinkBySubPath("settings/readme").click();
         String readmeText = updateReadmeText();
         checkReadmeTextWasUpdated(readmeText);
     }
 
     private void checkReadmeTextWasUpdated(String readmeText) {
         $("div.ember-notify-cn.custom-notify").shouldBe(visible, Duration.ofSeconds(5)).shouldHave(text("Readme has been saved"));
-        openEditForm("readme").click();
+        findVisibleLinkBySubPath("readme").click();
         $("div.markdown p").shouldHave(Condition.text("Readme was edited by " + readmeText));
     }
 
@@ -104,22 +102,6 @@ public class ProjectPageTests extends BaseTest {
     private void verifyProjectPage(String expectedUrl, String projectName) {
         webdriver().shouldHave(WebDriverConditions.url(expectedUrl));
         $("h2").shouldHave(text(projectName));
-    }
-
-    private void selectProject(String targetProjectPath) {
-        $("[href=\"" + targetProjectPath + "\"]").click();
-    }
-
-    private void searchProject(String projectName) {
-        $("#search").setValue(projectName);
-    }
-
-    private static void loginUser(String email, String password) {
-        $("#content-desktop #user_email").setValue(email);
-        $("#content-desktop #user_password").setValue(password);
-        $("#content-desktop #user_remember_me").click();
-        $("#content-desktop [name=commit]").click();
-        $(".common-flash-success").shouldBe(visible);
     }
 
     private static void countOfTestCasesShouldBeEqualTo(SelenideElement targetProject, int expectedCount) {
