@@ -1,4 +1,4 @@
-package io.testomat.e2e_tests_light_ui;
+package io.testomat.e2e_tests_light_ui.config;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
